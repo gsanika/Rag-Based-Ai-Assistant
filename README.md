@@ -1,4 +1,4 @@
-# 🧠 iPundit AI Document Assistant
+# 🧠 AI Document Assistant
 ### RAG-Powered Intelligent Document Q&A System
 
 ---
@@ -126,7 +126,7 @@ User Uploads Document
 ## Project Structure
 
 ```
-ipundit_rag/
+rag-assistant/
 ├── app/
 │   └── main.py              # Streamlit UI
 ├── utils/
@@ -216,4 +216,3 @@ ipundit_rag/
 
 ---
 
-*Built for iPundit Engineering — AI-powered document intelligence*
