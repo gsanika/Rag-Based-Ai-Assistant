@@ -1,0 +1,28 @@
+# iPundit RAG System — Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core Framework
+streamlit>=1.32.0
+
+# AI / LLM
+langchain>=0.2.0
+langchain-community>=0.2.0
+sentence-transformers>=2.7.0
+faiss-cpu>=1.8.0
+
+# Document Processing
+PyMuPDF>=1.24.0          # Best PDF reader (pymupdf)
+PyPDF2>=3.0.1            # PDF fallback
+pdfplumber>=0.11.0       # PDF fallback 2
+python-docx>=1.1.0       # Word documents
+docx2txt>=0.8            # Word documents alternative
+
+# HTTP & Utilities
+requests>=2.31.0
+numpy>=1.26.0
+
+# Optional: OpenAI backend
+# openai>=1.30.0
+
+# Optional: Anthropic backend
+# anthropic>=0.28.0
