@@ -51,7 +51,28 @@ Open browser: **http://localhost:8501**
 
 ## Setup for Best AI Answers
 
-### Option 1: Ollama (Free, Local, Recommended)
+### Option 1: Groq (Free Cloud API, Recommended) ⚡
+Groq is FREE and incredibly fast for RAG workloads. No GPU needed!
+
+```bash
+# 1. Get free Groq API key
+# Visit: https://console.groq.com/keys
+# Sign up and generate an API key
+
+# 2. Set environment variable
+export GROQ_API_KEY=gsk_your_key_here    # Linux/Mac
+set GROQ_API_KEY=gsk_your_key_here        # Windows (Command Prompt)
+$env:GROQ_API_KEY="gsk_your_key_here"     # Windows (PowerShell)
+
+# 3. Run the app
+streamlit run app/main.py
+```
+
+**Available Models:**
+- `mixtral-8x7b-32768` - Fast & powerful (default)
+- `llama2-70b-4096` - Very accurate
+
+### Option 2: Ollama (Free, Local, No Internet Required)
 ```bash
 # 1. Install Ollama
 # Windows/Mac: https://ollama.ai/download
@@ -66,15 +87,15 @@ ollama pull phi3           # Lightweight (2.3GB)
 ollama serve
 ```
 
-### Option 2: OpenAI (Paid)
+### Option 3: OpenAI (Paid)
 ```bash
 # Set environment variable
 export OPENAI_API_KEY=sk-your-key-here   # Linux/Mac
 set OPENAI_API_KEY=sk-your-key-here       # Windows
 ```
 
-### Option 3: Fallback (No Setup Required)
-Without Ollama or OpenAI, the system uses **keyword extraction** from the documents. Answers will be less polished but still functional.
+### Option 4: Fallback (No Setup Required)
+Without Groq/Ollama/OpenAI, the system uses **keyword extraction** from the documents. Answers will be less polished but still functional.
 
 ---
 
@@ -101,7 +122,7 @@ User Uploads Document
    Similarity Search
    (Top-K chunks)
         ↓
-   LLM (Ollama/OpenAI)
+   LLM (Groq/Ollama/OpenAI)
         ↓
    Answer + Sources
 ```
@@ -117,7 +138,7 @@ User Uploads Document
 | AI Framework | LangChain |
 | Embeddings | Sentence Transformers (all-MiniLM-L6-v2) |
 | Vector DB | FAISS |
-| LLM | Ollama + Llama3 / Mistral |
+| LLM | Groq API / Ollama / OpenAI |
 | PDF | PyMuPDF |
 | Word | python-docx |
 
@@ -132,7 +153,7 @@ rag-assistant/
 ├── utils/
 │   ├── document_processor.py # PDF/DOCX/TXT loader + chunker
 │   ├── vector_store.py       # FAISS embeddings + search
-│   ├── llm_handler.py        # Ollama / OpenAI / fallback
+│   ├── llm_handler.py        # Groq / Ollama / OpenAI / fallback
 │   └── summarizer.py         # Document summarization
 ├── data/
 │   ├── uploads/              # Uploaded files (auto-created)
@@ -179,6 +200,7 @@ rag-assistant/
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| `GROQ_API_KEY` | *(empty)* | Groq API key (optional, recommended) |
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama server URL |
 | `OLLAMA_MODEL` | `llama3` | Ollama model name |
 | `OPENAI_API_KEY` | *(empty)* | OpenAI API key (optional) |
@@ -187,9 +209,13 @@ rag-assistant/
 
 ## Troubleshooting
 
+**Q: "Groq error" when running**
+→ Make sure `GROQ_API_KEY` environment variable is set
+→ Get API key at: https://console.groq.com/keys
+
 **Q: Answers aren't accurate**
-→ Make sure Ollama is running: `ollama serve`
-→ Pull a model: `ollama pull llama3`
+→ Make sure you have uploaded and processed documents
+→ Try Groq API for faster, better responses
 
 **Q: PDF text not extracting**
 → Run: `pip install pymupdf`
@@ -198,7 +224,7 @@ rag-assistant/
 → Run: `pip install python-docx docx2txt`
 
 **Q: Slow performance**
-→ Use a smaller model: `ollama pull phi3`
+→ Groq is much faster than local Ollama
 → Reduce chunk size in `document_processor.py`
 
 ---
@@ -216,3 +242,15 @@ rag-assistant/
 
 ---
 
+## ✅ Why Groq?
+
+| Feature | Groq | Ollama | OpenAI |
+|---------|------|--------|--------|
+| Speed | ⚡⚡⚡ Fast | ⚡ Slow | ⚡⚡ Medium |
+| Cost | Free | Free | Paid |
+| GPU Required | No | Yes | No |
+| Setup | Easy | Hard | Easy |
+| Quality | Excellent | Good | Excellent |
+| Internet | Required | No | Required |
+
+---
