@@ -6,10 +6,14 @@ Handles PDF, DOCX, TXT loading + chunking.
 import os
 import re
 from typing import List, Dict, Any
+
 try:
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 except ImportError:
-    from langchain.text_splitter import RecursiveCharacterTextSplitter
+    try:
+        from langchain.text_splitter import RecursiveCharacterTextSplitter
+    except ImportError:
+        from langchain_community.document_loaders.text_splitter import RecursiveCharacterTextSplitter
 
 class DocumentProcessor:
     def __init__(self, chunk_size: int = 800, chunk_overlap: int = 150):
@@ -19,7 +23,7 @@ class DocumentProcessor:
             separators=["\n\n", "\n", ". ", " ", ""],
         )
 
-    # ── Public ────────────────────────────────────────────────────────────────
+    # ── Public ──────────────────────────────────────────────────────────
     def process(self, file_path: str, file_name: str) -> List[Dict[str, Any]]:
         """Load a file, extract text, split into chunks with metadata."""
         ext = os.path.splitext(file_name)[1].lower()
@@ -50,7 +54,7 @@ class DocumentProcessor:
                     })
         return chunks
 
-    # ── Loaders ───────────────────────────────────────────────────────────────
+    # ── Loaders ──────────────────────────────────────────────────────────
     def _load_pdf(self, path: str) -> List[tuple]:
         """Returns list of (page_number, text)."""
         try:
