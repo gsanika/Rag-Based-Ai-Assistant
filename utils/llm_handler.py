@@ -1,7 +1,7 @@
 """
 LLM Handler
-Primary: Ollama (local, free)
-Fallback: OpenAI-compatible API
+Primary: Groq API (fast cloud inference)
+Fallback: Ollama (local), OpenAI-compatible API
 """
 
 import os
@@ -24,6 +24,7 @@ Rules:
 
 class LLMHandler:
     def __init__(self):
+        self.groq_key = os.getenv("GROQ_API_KEY", "")
         self.ollama_base = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
         self.ollama_model = os.getenv("OLLAMA_MODEL", "llama3")
         self.openai_key   = os.getenv("OPENAI_API_KEY", "")
@@ -31,7 +32,11 @@ class LLMHandler:
 
     def _detect_backend(self) -> str:
         """Auto-detect available LLM backend."""
-        # Try Ollama first
+        # Try Groq first
+        if self.groq_key:
+            return "groq"
+        
+        # Try Ollama
         try:
             import requests
             r = requests.get(f"{self.ollama_base}/api/tags", timeout=3)
@@ -50,7 +55,7 @@ class LLMHandler:
         # Fallback to rule-based extraction
         return "fallback"
 
-    # ── Public ────────────────────────────────────────────────────────────────
+    # ── Public ──────────────────────────────────────────────────────────
     def answer(
         self,
         question: str,
@@ -63,7 +68,9 @@ class LLMHandler:
 
         context_text, sources = self._build_context(context_chunks)
 
-        if self.backend == "ollama":
+        if self.backend == "groq":
+            answer = self._ask_groq(question, context_text, history or [])
+        elif self.backend == "ollama":
             answer = self._ask_ollama(question, context_text, history or [])
         elif self.backend == "openai":
             answer = self._ask_openai(question, context_text, history or [])
@@ -85,7 +92,36 @@ class LLMHandler:
             parts.append(f"[Excerpt {i} — {ref}]\n{c['content']}")
         return "\n\n---\n\n".join(parts), sources
 
-    # ── Ollama ────────────────────────────────────────────────────────────────
+    # ── Groq ─────────────────────────────────────────────────────────────
+    def _ask_groq(self, question: str, context: str, history: List) -> str:
+        try:
+            from groq import Groq
+            
+            client = Groq(api_key=self.groq_key)
+            
+            messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+            for user_msg, assistant_msg in history[-3:]:  # last 3 turns
+                messages.append({"role": "user", "content": user_msg})
+                messages.append({"role": "assistant", "content": assistant_msg})
+            
+            messages.append({"role": "user", "content": f"""Context from documents:
+{context}
+
+Question: {question}
+
+Please answer based only on the context above."""})
+            
+            resp = client.chat.completions.create(
+                model="mixtral-8x7b-32768",  # or use "llama2-70b-4096"
+                messages=messages,
+                max_tokens=800,
+                temperature=0.2,
+            )
+            return resp.choices[0].message.content
+        except Exception as e:
+            return f"Groq error: {e}. Make sure GROQ_API_KEY is set."
+
+    # ── Ollama ──────────────────────────────────────────────────────────────
     def _ask_ollama(self, question: str, context: str, history: List) -> str:
         import requests, json
 
@@ -112,7 +148,7 @@ Please answer based only on the context above."""})
         except Exception as e:
             return f"Ollama error: {e}. Make sure Ollama is running: `ollama serve`"
 
-    # ── OpenAI ────────────────────────────────────────────────────────────────
+    # ── OpenAI ──────────────────────────────────────────────────────────────
     def _ask_openai(self, question: str, context: str, history: List) -> str:
         try:
             from openai import OpenAI
@@ -134,7 +170,7 @@ Please answer based only on the context above."""})
         except Exception as e:
             return f"OpenAI error: {e}"
 
-    # ── Fallback (no LLM) ─────────────────────────────────────────────────────
+    # ── Fallback (no LLM) ────────────────────────────────────────────────────
     def _fallback_answer(self, question: str, chunks: List[Dict]) -> str:
         """Simple keyword extraction when no LLM is available."""
         keywords = set(re.findall(r"\b\w{4,}\b", question.lower()))
@@ -156,5 +192,5 @@ Please answer based only on the context above."""})
             page = c["metadata"].get("page", "?")
             answer += f"**From {src} (Page {page}):**\n{c['content'][:600]}\n\n"
 
-        answer += "\n\n⚠️ *Note: For better AI answers, install and run Ollama locally: https://ollama.ai*"
+        answer += "\n\n⚠️ *Note: For faster responses, use Groq API: https://console.groq.com*"
         return answer
